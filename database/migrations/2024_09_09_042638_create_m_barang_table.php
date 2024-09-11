@@ -14,8 +14,13 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('m_barang', function (Blueprint $table) {
-            $table->bigInteger('barang_id',20);
+            $table->id('barang_id');
+            $table->unsignedBigInteger('kategori_id');
             $table->string('barang_nama',100);
+            $table->string('barang_kode')->unique();
+            $table->integer('harga_beli');
+            $table->integer('harga_jual');
+            $table->foreign('kategori_id')->references('kategori_id')->on('m_kategori');
             $table->timestamps();
         });
     }
