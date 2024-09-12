@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreign('user_id')->references('user_id')->on('m_user');
             $table->string('pembeli', 50)->unique();
             $table->string('penjualan_kode',50);
-            $table->dateTime('penjualan_tanggal');
+            $table->date('penjualan_tanggal');
             $table->timestamps();
         });
     }
