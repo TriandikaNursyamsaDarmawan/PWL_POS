@@ -4,7 +4,10 @@
         <title> Data Level Pengguna</title>
     </head>
     <body>
+        
         <h1> Data Level Pengguna</h1>
+        
+    <a href="{{url('/user/tambah')}}">Tambah Data User</a>
         <table border="1" cellpadding="2" cellspasing="0">
             <tr>
                 <th>ID</th>
@@ -14,10 +17,11 @@
             </tr>
             @foreach ($data as $d)
             <tr>
-                <td>{{$data->user_id}}</td>
-                <td>{{$data->username}}</td>
-                <td>{{$data->nama}}</td>
-                <td>{{$data->level}}</td>
+                <td>{{$d->user_id}}</td>
+                <td>{{$d->username}}</td>
+                <td>{{$d->nama}}</td>
+                <td>{{$d->level}}</td>
+                <td><a href="/user/ubah/{{ $d->user_id}}">Ubah</a> | <a href="/user/hapus/{{$d->user_id}}">Hapus</a></td>
             </tr>
             @endforeach
         </table>
