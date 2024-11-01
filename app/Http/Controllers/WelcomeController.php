@@ -3,6 +3,10 @@ namespace App\Http\Controllers;
 
 class WelcomeController extends Controller
 {
+    public function __construct()
+    {
+    }
+
     public function index()
     {
         $breadcrumb = (object) [

@@ -1,12 +1,16 @@
-@extends('layouts.template') 
- 
+@extends('layout.template')
+
 @section('content')
     <div class="card card-outline card-primary">
         <div class="card-header">
             <h3 class="card-title">{{ $page->title }}</h3>
             <div class="card-tools">
-                <a class="btn btn-sm btn-primary mt-1" href="{{ url('kategori/create') }}">Tambah</a>
-                <button onclick="modalAction('{{ url('kategori/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Tambah Ajax</button>
+                <a class="btn btn-sm btn-primary mt-1" href="{{ url('level/create') }}">Tambah</a>
+                <button onclick="modalAction('{{ url('/level/import') }}')" class="btn btn-info">Import Level</button>
+                <a href="{{ url('/level/export_pdf') }}" class="btn btn-warning"><i class="fa fa-file-pdf"></i> Export
+                    Level</a>
+                <button onclick="modalAction('{{ url('level/create_ajax') }}')" class="btn btn-sm btn-success mt-1">Tambah
+                    Ajax</button>
             </div>
         </div>
         <div class="card-body">
@@ -21,15 +25,16 @@
             <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Kategori Kode</th>
-                    <th>Kategori Nama</th>
+                    <th>Level Kode</th>
+                    <th>Level Nama</th>
                     <th>Aksi</th>
                 </tr>
             </thead>
         </table>
     </div>
     </div>
-    <div id="myModal" class="modal fade animate shake" tabindex="-1" role="dialog" data backdrop="static" data-keyboard="false" data-width="75%" aria-hidden="true"></div>
+    <div id="myModal" class="modal fade animate shake" tabindex="-1" role="dialog" data backdrop="static"
+        data-keyboard="false" data-width="75%" aria-hidden="true"></div>
 @endsection
 @push('css')
 @endpush
@@ -46,7 +51,7 @@
                 // serverSide: true, jika ingin menggunakan server side processing 
                 serverSide: true,
                 ajax: {
-                    "url": "{{ url('kategori/list') }}",
+                    "url": "{{ url('level/list') }}",
                     "dataType": "json",
                     "type": "POST",
                 },
@@ -57,14 +62,14 @@
                     orderable: false,
                     searchable: false
                 }, {
-                    data: "kategori_kode",
+                    data: "level_kode",
                     className: "",
                     // orderable: true, jika ingin kolom ini bisa diurutkan  
                     orderable: true,
                     // searchable: true, jika ingin kolom ini bisa dicari 
                     searchable: true
                 }, {
-                    data: "kategori_nama",
+                    data: "level_nama",
                     className: "",
                     orderable: true,
                     searchable: true

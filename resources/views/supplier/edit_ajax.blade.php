@@ -11,12 +11,12 @@
                     <h5><i class="icon fas fa-ban"></i> Kesalahan!!!</h5>
                     Data yang anda cari tidak ditemukan
                 </div>
-                <a href="{{ url('/kategori') }}" class="btn btn-warning">Kembali</a>
+                <a href="{{ url('/supplier') }}" class="btn btn-warning">Kembali</a>
             </div>
         </div>
     </div>
 @else
-    <form action="{{ url('/kategori/' . $kategori->kategori_id . '/update_ajax') }}" method="POST" id="form-edit">
+    <form action="{{ url('/supplier/' . $supplier->supplier_id . '/update_ajax') }}" method="POST" id="form-edit">
         @csrf
         @method('PUT')
         <div id="modal-master" class="modal-dialog modal-lg" role="document">
@@ -28,16 +28,22 @@
                 </div>
                 <div class="modal-body">
                     <div class="form-group">
-                        <label>kategori Nama</label>
-                        <input value="{{ $kategori->kategori_nama }}" type="text" name="kategori_nama" id="kategori_nama"
+                        <label>supplier Nama</label>
+                        <input value="{{ $supplier->supplier_nama }}" type="text" name="supplier_nama" id="supplier_nama"
                             class="form-control" required>
-                        <small id="error-kategori_nama" class="error-text form-text text-danger"></small>
+                        <small id="error-supplier_nama" class="error-text form-text text-danger"></small>
                     </div>
                     <div class="form-group">
-                        <label>kategori Kode</label>
-                        <input value="{{ $kategori->kategori_kode }}" type="text" name="kategori_kode" id="name"
+                        <label>supplier Kode</label>
+                        <input value="{{ $supplier->supplier_kode }}" type="text" name="supplier_kode" id="name"
                             class="form-control" required>
-                        <small id="error-kategori_kode" class="error-text form-text text-danger"></small>
+                        <small id="error-supplier_kode" class="error-text form-text text-danger"></small>
+                    </div>
+                    <div class="form-group">
+                        <label>supplier Alamat</label>
+                        <input value="{{ $supplier->supplier_kode }}" type="text" name="supplier_alamat" id="name"
+                            class="form-control" required>
+                        <small id="error-supplier_alamat" class="error-text form-text text-danger"></small>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -51,12 +57,16 @@
         $(document).ready(function() {
             $("#form-edit").validate({
                 rules: {
-                    kategori_kode: {
+                    supplier_kode: {
                         required: true,
                         minlength: 3,
                         maxlength: 10
                     },
-                    kategori_nama: {
+                    supplier_nama: {
+                        required: true,
+                        maxlength: 100
+                    },
+                    supplier_alamat: {
                         required: true,
                         maxlength: 100
                     },

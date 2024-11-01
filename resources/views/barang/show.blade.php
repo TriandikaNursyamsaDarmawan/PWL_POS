@@ -1,4 +1,4 @@
-@extends('layouts.template') 
+@extends('layout.template') 
  
 @section('content') 
   <div class="card card-outline card-primary"> 
@@ -30,9 +30,11 @@
         @endempty 
         <a href="{{ url('barang') }}" class="btn btn-sm btn-default mt-2">Kembali</a> 
     </div> 
-</div> 
+  </div> 
 @endsection 
+ 
 @push('css') 
 @endpush 
+ 
 @push('js') 
 @endpush 

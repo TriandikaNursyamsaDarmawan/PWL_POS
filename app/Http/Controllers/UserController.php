@@ -11,6 +11,8 @@ use Yajra\DataTables\Facades\DataTables;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use Barryvdh\DomPDF\Facade\Pdf;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 
 class UserController extends Controller
 {
@@ -204,51 +206,51 @@ class UserController extends Controller
         return view('user.index', ['breadcrumb' => $breadcrumb, 'page' => $page, 'level' => $level, 'activeMenu' => $activeMenu]);
     }
 
-    public function tambah()
-    {
-        return view('user_tambah');
-    }
+    // public function tambah()
+    // {
+    //     return view('user_tambah');
+    // }
 
-    public function tambah_simpan(Request $request)
-    {
-        UserModel::create([
-            'username' => $request->username,
-            'nama' => $request->nama,
-            'password' => Hash::make('$request->password'),
-            'level_id' => $request->level_id
-        ]);
-        return redirect('/user');
-    }
+    // public function tambah_simpan(Request $request)
+    // {
+    //     UserModel::create([
+    //         'username' => $request->username,
+    //         'nama' => $request->nama,
+    //         'password' => Hash::make('$request->password'),
+    //         'level_id' => $request->level_id
+    //     ]);
+    //     return redirect('/user');
+    // }
 
-    public function ubah($id)
-    {
-        $user = UserModel::find($id);
-        return view('user_ubah', ['data' => $user]);
-    }
+    // public function ubah($id)
+    // {
+    //     $user = UserModel::find($id);
+    //     return view('user_ubah', ['data' => $user]);
+    // }
 
-    public function ubah_simpan($id, Request $request)
-    {
-        $user = UserModel::find($id);
-        $user->username = $request->username;
-        $user->nama = $request->nama;
-        $user->password = Hash::make('$request->password');
-        $user->level_id = $request->level_id;
-        $user->save();
+    // public function ubah_simpan($id, Request $request)
+    // {
+    //     $user = UserModel::find($id);
+    //     $user->username = $request->username;
+    //     $user->nama = $request->nama;
+    //     $user->password = Hash::make('$request->password');
+    //     $user->level_id = $request->level_id;
+    //     $user->save();
 
-        return redirect('/user');
-    }
+    //     return redirect('/user');
+    // }
 
-    public function hapus($id)
-    {
-        $user = UserModel::find($id);
-        $user->delete();
+    // public function hapus($id)
+    // {
+    //     $user = UserModel::find($id);
+    //     $user->delete();
 
-        return redirect('/user');
-    }
+    //     return redirect('/user');
+    // }
 
     public function list(Request $request)
     {
-        $users = UserModel::select('user_id', 'username', 'nama', 'file_profil', 'level_id')
+        $users = UserModel::select('user_id', 'username', 'nama', 'level_id', 'file_profil')
             ->with('level');
 
         if ($request->level_id) {
@@ -273,44 +275,74 @@ class UserController extends Controller
 
     public function create()
     {
-        $breadcrumb = (object)[
+        $breadcrumb = (object) [
             'title' => 'Tambah User',
             'list' => ['Home', 'User', 'Tambah']
         ];
-        $page = (object)[
+
+        $page = (object) [
             'title' => 'Tambah user baru'
         ];
         $level = LevelModel::all();
         $activeMenu = 'user';
-        return view('user.create', ['breadcrumb' => $breadcrumb, 'page' => $page, 'level' => $level, 'activeMenu' => $activeMenu]);
+
+        return view('user.create', ['breadcrumb' => $breadcrumb, 'page' => $page, 'activeMenu' => $activeMenu, 'level' => $level]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
             'username' => 'required|string|min:3|unique:m_user,username',
-            'nama' => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'password' => 'required|min:5',
             'level_id' => 'required|integer'
         ]);
 
-        UserModel::create([
+        $newReq = [
+            'level_id' => $request->level_id,
             'username' => $request->username,
-            'nama' => $request->nama,
-            'password' => bcrypt($request->password),
-            'level_id' => $request->level_id
-        ]);
+            'name'     => $request->name,
+            'password' => $request->password, // hash the password
+        ];
+
+        $fileExtension = $request->file('file_profil')->getClientOriginalExtension();
+        $fileName = 'profile_' . Auth::user()->user_id . '.' . $fileExtension;
+        $oldFile = 'profile_pictures/' . $fileName;
+        if (Storage::disk('public')->exists($oldFile)) {
+            Storage::disk('public')->delete($oldFile);
+        }
+
+        $path = $request->file('file_profil')->storeAs('profile_pictures', $fileName, 'public');
+        session(['profile_img_path' => $path]);
+        $newReq['image_profile'] = $path;
+
+        UserModel::create($newReq);
+        return redirect('/user')->with('success', 'Data user berhasil disimpan');
+
+        $fileExtension = $request->file('file_profil')->getClientOriginalExtension();
+        $fileName = 'profile_' . Auth::user()->user_id . '.' . $fileExtension;
+        $oldFile = 'profile_pictures/' . $fileName;
+        if (Storage::disk('public')->exists($oldFile)) {
+            Storage::disk('public')->delete($oldFile);
+        }
+        $path = $request->file('file_profil')->storeAs('profile_pictures', $fileName, 'public');
+        session(['profile_img_path' => $path]);
+        $newReq['file_profil'] = $path;
+
+        UserModel::create($newReq);
         return redirect('/user')->with('success', 'Data user berhasil disimpan');
     }
 
-    public function show(String $id)
+    public function show(string $id)
     {
         $user = UserModel::with('level')->find($id);
-        $breadcrumb = (object)[
+
+        $breadcrumb = (object) [
             'title' => 'Detail User',
             'list' => ['Home', 'User', 'Detail']
         ];
-        $page = (object)[
+
+        $page = (object) [
             'title' => 'Detail user'
         ];
         $activeMenu = 'user';
@@ -321,12 +353,14 @@ class UserController extends Controller
     {
         $user = UserModel::find($id);
         $level = LevelModel::all();
-        $breadcrumb = (object)[
-            'title' => 'Edit user',
+
+        $breadcrumb = (object) [
+            'title' => 'Edit User',
             'list' => ['Home', 'User', 'Edit']
         ];
-        $page = (object)[
-            'title' => 'Edit User'
+
+        $page = (object) [
+            'title' => 'Edit user'
         ];
         $activeMenu = 'user';
         return view('user.edit', ['breadcrumb' => $breadcrumb, 'page' => $page, 'user' => $user, 'level' => $level, 'activeMenu' => $activeMenu]);
@@ -336,20 +370,38 @@ class UserController extends Controller
     {
         $request->validate([
             'username' => 'required|string|min:3|unique:m_user,username,' . $id . ',user_id',
-            'nama' => 'required|string|max:100',
+            'name' => 'required|string|max:100',
             'password' => 'nullable|min:5',
             'level_id' => 'required|integer'
         ]);
 
-        UserModel::find($id)->update([
+        $newReq = [
+            'level_id' => $request->level_id,
             'username' => $request->username,
-            'nama' => $request->nama,
-            'password' => $request->password ? bcrypt($request->password) : UserModel::find($id)->password,
-            'level_id' => $request->level_id
-        ]);
+            'name'     => $request->name,
+        ];
+        $check = UserModel::find($id);
+        if ($check) {
+            if ($request->filled('password')) {
+                $newReq['password'] = $request->password; // hash the password
+            }
+            if ($request->hasFile('file_profil')) {
+                $fileExtension = $request->file('file_profil')->getClientOriginalExtension();
+                $fileName = 'profile_' . Auth::user()->user_id . '.' . $fileExtension;
+                $oldFile = 'profile_pictures/' . $fileName;
+                if (Storage::disk('public')->exists($oldFile)) {
+                    Storage::disk('public')->delete($oldFile);
+                }
+                $path = $request->file('file_profil')->storeAs('profile_pictures', $fileName, 'public');
+                $newReq['image_profile'] = $path;
+            }
 
-        return redirect('/user')->with('success' . "data user berhasil diubah");
+            $check->update($newReq);
+        }
+
+        return redirect('/user')->with('success', "Data user berhasil diubah");
     }
+
 
     public function destroy(string $id)
     {
@@ -367,10 +419,10 @@ class UserController extends Controller
 
     public function create_ajax()
     {
-        $level = levelModel::select('level_id', 'level_nama')->get();
-        return view('user.create_ajax')
-            ->with('level', $level);
+        $level = LevelModel::select('level_id', 'level_nama')->get();
+        return view('user.create_ajax')->with('level', $level);
     }
+
 
     public function store_ajax(Request $request)
     {
@@ -415,7 +467,7 @@ class UserController extends Controller
 
             // Store the new file with the user id as the file name
             $path = $request->file('file_profil')->storeAs('profile_pictures', $fileName, 'public');
-            session(['profile_img_path' => $path]);
+            session(['profile_img_path' => Auth::user()->file_profil]);
 
             // Add the profile file name to the new request data
             $newReq['file_profil'] = $path;
@@ -443,42 +495,37 @@ class UserController extends Controller
 
     public function update_ajax(Request $request, $id)
     {
-        // cek apakah request dari ajax
         if ($request->ajax() || $request->wantsJson()) {
-
             $rules = [
-                'level_id'   => 'required|integer',
-                'username'   => 'required|max:20|unique:m_user,username,' . $id . ',user_id',
-                'nama'       => 'required|max:100',
-                'password'   => 'nullable|min:6|max:20',
-                'file_profil' => 'image|mimes:jpeg,png,jpg,gif|max:2048',
+                'level_id' => 'required|integer',
+                'username' => 'required|max:20|unique:m_user,username,' . $id . ',user_id',
+                'name'     => 'required|max:100',
+                'password' => 'nullable|min:6|max:20',
+                'file_profils' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             ];
 
             $validator = Validator::make($request->all(), $rules);
 
             if ($validator->fails()) {
                 return response()->json([
-                    'status'   => false,
+                    'status'   => false,    // respon json, true: berhasil, false: gagal 
                     'message'  => 'Validasi gagal.',
-                    'msgField' => $validator->errors()
+                    'msgField' => $validator->errors()  // menunjukkan field mana yang error 
                 ]);
             }
-
-            // Prepare the request data
             $newReq = [
                 'level_id' => $request->level_id,
                 'username' => $request->username,
-                'nama'     => $request->nama,
+                'name'     => $request->name,
             ];
+
 
             $check = UserModel::find($id);
             if ($check) {
-                // If password is provided, add it to the update request
-                if ($request->filled('password')) {
-                    $newReq['password'] = bcrypt($request->password); // hash the password
+                if (!$request->filled('password')) { // jika password tidak diisi, maka hapus dari request 
+                    $request->request->remove('password');
                 }
 
-                // Handle profile image file upload
                 if ($request->hasFile('file_profil')) {
                     // Define the file name using the user's id and the file extension
                     $fileExtension = $request->file('file_profil')->getClientOriginalExtension();
@@ -492,14 +539,11 @@ class UserController extends Controller
 
                     // Store the new file with the user id as the file name
                     $path = $request->file('file_profil')->storeAs('profile_pictures', $fileName, 'public');
-
-                    // Add file name to the update request
+                    session(['profile_img_path' => Auth::user()->file_profil]);
                     $newReq['file_profil'] = $path;
                 }
 
-                // Update the user data in the database
                 $check->update($newReq);
-
                 return response()->json([
                     'status'  => true,
                     'message' => 'Data berhasil diupdate'
@@ -511,7 +555,7 @@ class UserController extends Controller
                 ]);
             }
         }
-        // return redirect('/');
+        return redirect('/');
     }
 
     public function confirm_ajax(string $id)
@@ -534,6 +578,83 @@ class UserController extends Controller
                 return response()->json([
                     'status' => false,
                     'message' => 'data tidak ditemukan'
+                ]);
+            }
+        }
+        return redirect('/');
+    }
+
+    public function show_ajax(string $id)
+    {
+        $user = UserModel::find($id);
+        $level = LevelModel::all();
+        return view('user.show_ajax', ['user' => $user, 'level' => $level]);
+    }
+
+    public function export_pdf()
+    {
+        $user = UserModel::select('level_id', 'username', 'nama')
+            ->get();
+
+        $pdf = Pdf::loadView('user.export_pdf', ['user' => $user]);
+        $pdf->setPaper('a4', 'potrait');
+        $pdf->setOption('isRemoteEnabled', true);
+        $pdf->render();
+
+        return $pdf->stream('Data User' . date('Y-m-d H:i:s') . '.pdf');
+    }
+
+    public function import()
+    {
+        return view('user.import');
+    }
+
+    public function import_ajax(Request $request)
+    {
+        if ($request->ajax() || $request->wantsJson()) {
+            $rules = [
+                // validasi file harus xls atau xlsx, max 1MB
+                'file_user' => ['required', 'mimes:xlsx', 'max:1024']
+            ];
+            $validator = Validator::make($request->all(), $rules);
+            if ($validator->fails()) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Validasi Gagal',
+                    'msgField' => $validator->errors()
+                ]);
+            }
+            $file = $request->file('file_user'); // ambil file dari request
+            $reader = IOFactory::createReader('Xlsx'); // load reader file excel
+            $reader->setReadDataOnly(true); // hanya membaca data
+            $spreadsheet = $reader->load($file->getRealPath()); // load file excel
+            $sheet = $spreadsheet->getActiveSheet(); // ambil sheet yang aktif
+            $data = $sheet->toArray(null, false, true, true); // ambil data excel
+            $insert = [];
+            if (count($data) > 1) { // jika data lebih dari 1 baris
+                foreach ($data as $baris => $value) {
+                    if ($baris > 1) { // baris ke 1 adalah header, maka lewati
+                        $insert[] = [
+                            'level_id' => $value['A'],
+                            'username' => $value['B'],
+                            'nama' => $value['C'],
+                            'password' => bcrypt($value['D']),
+                            'created_at' => now(),
+                        ];
+                    }
+                }
+                if (count($insert) > 0) {
+                    // insert data ke database, jika data sudah ada, maka diabaikan
+                    UserModel::insertOrIgnore($insert);
+                }
+                return response()->json([
+                    'status' => true,
+                    'message' => 'Data berhasil diimport'
+                ]);
+            } else {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Tidak ada data yang diimport'
                 ]);
             }
         }

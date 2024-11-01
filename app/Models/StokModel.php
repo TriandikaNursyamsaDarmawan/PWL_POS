@@ -13,20 +13,23 @@ class StokModel extends Model
     protected $table = 't_stok';
     protected $primaryKey = 'stok_id';
 
-    protected $fillable = ['supplier_id','barang_id','user_id','stok_tanggal','stok_jumlah'];
+    protected $fillable = ['supplier_id', 'barang_id', 'user_id', 'stok_tanggal', 'stok_jumlah', 'created_at', 'updated_at'];
+    protected $casts = [
+        'stok_tanggal' => 'datetime', // or 'date'
+    ];
 
-    public function supplier():BelongsTo
+    public function user(): BelongsTo
     {
-        return $this->belongsTo(SupplierModel::class, 'supplier_id','supplier_id');
+        return $this->belongsTo(UserModel::class, 'user_id', 'user_id');
     }
 
-    public function barang():BelongsTo
+    public function barang(): BelongsTo
     {
-        return $this->belongsTo(BarangModel::class,'barang_id','barang_id');
+        return $this->belongsTo(BarangModel::class, 'barang_id', 'barang_id');
     }
 
-    public function user():BelongsTo
+    public function supplier(): BelongsTo
     {
-        return $this->belongsTo(UserModel::class,'user_id','user_id');
+        return $this->belongsTo(SupplierModel::class, 'supplier_id', 'supplier_id');
     }
 }
