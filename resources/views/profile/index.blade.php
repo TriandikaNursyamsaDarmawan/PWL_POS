@@ -12,9 +12,9 @@
                             <div class="col-md-4">
                                 <div class="text-center mb-4">
                                     <img class="rounded-circle"
-                                         src="{{ asset($user->foto) }}"
-                                         alt="Profile Picture"
-                                         style="width: 150px; height: 150px;">
+                                        src="{{ asset($user->foto) }}"
+                                        alt="Profile Picture"
+                                        style="width: 150px; height: 150px;">
                                     <div class="mt-2">
                                         <button onclick="modalAction('{{ url('/profile/' . session('user_id') . '/edit_foto') }}')"
                                                 class="btn btn-primary">Edit Foto</button>
